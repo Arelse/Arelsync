@@ -5,6 +5,7 @@ import { analyseAlbum } from '../utils/analyser.js'
 import { buildImageRecord } from '../utils/imageRecord.js'
 import { pickFromGallery } from '../utils/gallery.js'
 import AlbumCover from '../components/AlbumCover.jsx'
+import ImageViewer from '../components/ImageViewer.jsx'
 
 export default function AlbumDetail() {
   const { id } = useParams()
@@ -17,6 +18,11 @@ export default function AlbumDetail() {
   const [importStatus, setImportStatus] = useState('')
   const [editingCover, setEditingCover] = useState(false)
   const [coverBusy, setCoverBusy] = useState(false)
+  const [viewerAt, setViewerAt] = useState(null)
+  const [reorder, setReorder] = useState(false)
+  const [showNumbers, setShowNumbers] = useState(() => localStorage.getItem('arelse_show_numbers') !== '0')
+  const [moveFrom, setMoveFrom] = useState(null)
+  const [moveVal, setMoveVal] = useState('')
 
   if (loading) return <div className="skeleton" style={{ height: 300, borderRadius: 14 }} />
 
@@ -79,6 +85,33 @@ export default function AlbumDetail() {
     setAnalyseStatus('')
   }
 
+  const toggleNumbers = () => {
+    const next = !showNumbers
+    setShowNumbers(next)
+    localStorage.setItem('arelse_show_numbers', next ? '1' : '0')
+  }
+
+  const moveImage = async (from, to) => {
+    const count = album.images.length
+    if (to < 0 || to >= count || to === from) return
+    const next = [...album.images]
+    const [item] = next.splice(from, 1)
+    next.splice(to, 0, item)
+    await updateAlbum(album.id, { images: next })
+  }
+
+  const reversePages = async () => {
+    if (!confirm('Reverse the page order? Page 1 becomes the last page.')) return
+    await updateAlbum(album.id, { images: [...album.images].reverse() })
+  }
+
+  const submitMove = async (e) => {
+    e.preventDefault()
+    const to = parseInt(moveVal, 10) - 1
+    if (Number.isFinite(to)) await moveImage(moveFrom, Math.min(album.images.length - 1, Math.max(0, to)))
+    setMoveFrom(null)
+  }
+
   const setCoverFromImage = async (url) => {
     await updateAlbum(album.id, { coverImage: url })
     setEditingCover(false)
@@ -121,6 +154,9 @@ export default function AlbumDetail() {
             <button className="btn" onClick={importFromGallery} disabled={importing}>
               {importing ? (importStatus || 'Working…') : '+ Import from gallery'}
             </button>
+            {album.images.length > 0 && (
+              <button className="btn secondary" onClick={() => setViewerAt(0)}>▶ Read</button>
+            )}
             <label className="btn secondary" style={{ cursor: 'pointer' }}>
               Add single file
               <input ref={fileRef} type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} disabled={importing} />
@@ -160,6 +196,21 @@ export default function AlbumDetail() {
         )}
       </div>
 
+      {album.images.length > 0 && (
+        <div className="section-head">
+          <strong>Pages ({album.images.length})</strong>
+          <div className="view-controls">
+            <div className="seg">
+              <button className={showNumbers || reorder ? 'on' : ''} onClick={toggleNumbers}>Numbers</button>
+            </div>
+            <div className="seg">
+              <button className={reorder ? 'on' : ''} onClick={() => setReorder(r => !r)}>Reorder</button>
+              <button onClick={reversePages}>Reverse</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {album.images.length === 0 ? (
         <div className="empty-state">
           <h3>No images yet</h3>
@@ -167,16 +218,51 @@ export default function AlbumDetail() {
         </div>
       ) : (
         <div className="image-grid">
-          {album.images.map(img => (
-            <div key={img.id} style={{ position: 'relative' }}>
-              <img src={img.url} alt="" />
+          {album.images.map((img, i) => (
+            <div key={img.id} className="page-tile">
+              <img
+                src={img.url} alt="" loading="lazy"
+                style={reorder ? { cursor: 'default' } : undefined}
+                onClick={() => { if (!reorder) setViewerAt(i) }}
+              />
+              {(showNumbers || reorder) && (
+                reorder
+                  ? <button className="page-num" onClick={() => { setMoveFrom(i); setMoveVal(String(i + 1)) }}>{i + 1}</button>
+                  : <span className="page-num">{i + 1}</span>
+              )}
               <button
                 onClick={() => removeImage(album.id, img.id)}
                 className="btn danger"
                 style={{ position: 'absolute', top: 6, right: 6, padding: '2px 8px', fontSize: '0.7rem' }}
               >✕</button>
+              {reorder && (
+                <div className="page-move">
+                  <button disabled={i === 0} onClick={() => moveImage(i, i - 1)}>◀</button>
+                  <button disabled={i === album.images.length - 1} onClick={() => moveImage(i, i + 1)}>▶</button>
+                </div>
+              )}
             </div>
           ))}
+        </div>
+      )}
+
+      {viewerAt !== null && (
+        <ImageViewer images={album.images} startIndex={viewerAt} onClose={() => setViewerAt(null)} onDelete={(img) => removeImage(album.id, img.id)} />
+      )}
+
+      {moveFrom !== null && (
+        <div className="modal-overlay" onClick={() => setMoveFrom(null)}>
+          <form className="modal" onClick={e => e.stopPropagation()} onSubmit={submitMove}>
+            <h3 style={{ marginTop: 0 }}>Move page {moveFrom + 1}</h3>
+            <div className="field">
+              <label>New position (1–{album.images.length})</label>
+              <input type="number" min="1" max={album.images.length} value={moveVal} onChange={e => setMoveVal(e.target.value)} autoFocus />
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" className="btn secondary" style={{ flex: 1 }} onClick={() => setMoveFrom(null)}>Cancel</button>
+              <button className="btn" style={{ flex: 1 }}>Move</button>
+            </div>
+          </form>
         </div>
       )}
 
