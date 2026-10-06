@@ -14,7 +14,7 @@ import Recognizer from './pages/Recognizer.jsx'
 
 const TITLES = { '/': 'Dashboard', '/albums': 'Albums', '/settings': 'Settings', '/gallery': 'Whole Gallery', '/recognizer': 'Recognizer' }
 
-function Shell({ theme, setTheme, premium, setPremium }) {
+function Shell({ theme, setTheme, premium, setPremium, skin, setSkin }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
   const title = TITLES[location.pathname] || (location.pathname.startsWith('/albums/') ? 'Album' : 'Arelsync')
@@ -34,7 +34,7 @@ function Shell({ theme, setTheme, premium, setPremium }) {
             <Route path="/albums/:id" element={<AlbumDetail />} />
             <Route path="/gallery" element={<WholeGallery />} />
             <Route path="/recognizer" element={<Recognizer />} />
-            <Route path="/settings" element={<Settings theme={theme} setTheme={setTheme} premium={premium} setPremium={setPremium} />} />
+            <Route path="/settings" element={<Settings theme={theme} setTheme={setTheme} premium={premium} setPremium={setPremium} skin={skin} setSkin={setSkin} />} />
           </Routes>
         </div>
       </div>
@@ -56,6 +56,7 @@ function Gate(props) {
 export default function App() {
   const [theme, setThemeState] = useState(() => localStorage.getItem('arelse_theme') || 'dark')
   const [premium, setPremiumState] = useState(() => localStorage.getItem('arelse_premium_ui') !== '0')
+  const [skin, setSkinState] = useState(() => localStorage.getItem('arelse_ui_skin') || 'default')
 
   const setTheme = (t) => {
     setThemeState(t)
@@ -65,6 +66,20 @@ export default function App() {
     setPremiumState(on)
     localStorage.setItem('arelse_premium_ui', on ? '1' : '0')
   }
+  // "UI Switch": Arellucent / Arelystic are full skins that come with their
+  // own locked-in color identity. Switching to one remembers whatever theme
+  // you had, and switching back to Default restores it.
+  const setSkin = (s) => {
+    if (s === 'default') {
+      const prev = localStorage.getItem('arelse_theme_before_skin')
+      if (prev) setTheme(prev)
+    } else {
+      if (skin === 'default') localStorage.setItem('arelse_theme_before_skin', theme)
+      setTheme(s)
+    }
+    setSkinState(s)
+    localStorage.setItem('arelse_ui_skin', s)
+  }
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -72,11 +87,14 @@ export default function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-ui', premium ? 'premium' : 'standard')
   }, [premium])
+  useEffect(() => {
+    document.documentElement.setAttribute('data-skin', skin)
+  }, [skin])
 
   return (
     <HashRouter>
       <AuthProvider>
-        <Gate theme={theme} setTheme={setTheme} premium={premium} setPremium={setPremium} />
+        <Gate theme={theme} setTheme={setTheme} premium={premium} setPremium={setPremium} skin={skin} setSkin={setSkin} />
       </AuthProvider>
     </HashRouter>
   )
