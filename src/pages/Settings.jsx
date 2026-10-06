@@ -26,12 +26,43 @@ const THEMES = [
   { id: 'sapphire', label: 'Sapphire ✦', a: '#0a1c34', b: '#3b82f6' },
 ]
 
-export default function Settings({ theme, setTheme, premium, setPremium }) {
+const SKINS = [
+  { id: 'default', label: 'Default', desc: "Your theme and Premium UI setting above." },
+  { id: 'arellucent', label: 'Arellucent', desc: 'Crimson glow, heavy glass blur, gradient titles, shine-sweep buttons.', a: '#050102', b: '#ff2a5f' },
+  { id: 'arelystic', label: 'Arelystic', desc: 'Deep obsidian, pink accent, calmer glass, right-edge nav highlight.', a: '#0a0406', b: '#ff477e' },
+]
+
+export default function Settings({ theme, setTheme, premium, setPremium, skin, setSkin }) {
   const { user, logout } = useAuth()
   const { layout, setLayout, perRow, setPerRow } = useViewPrefs()
 
   return (
     <div>
+      <h3>UI Switch</h3>
+      <div className="card" style={{ marginBottom: 20 }}>
+        <p style={{ marginTop: 0, color: 'var(--text-dim)', fontSize: '0.85rem' }}>
+          Swap the whole app's look in one tap. Arellucent and Arelystic bring their own color
+          identity — your regular theme picks are remembered and come back under Default.
+        </p>
+        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
+          {SKINS.map(s => (
+            <div key={s.id} onClick={() => setSkin(s.id)}
+              className={'theme-swatch' + (skin === s.id ? ' selected' : '')}
+              style={{
+                height: 76,
+                background: s.a ? `linear-gradient(135deg, ${s.a}, ${s.b})` : 'var(--bg)',
+                border: s.a ? undefined : '1px solid var(--border)',
+                color: s.a ? '#fff' : 'var(--text)'
+              }}>
+              {s.label}
+            </div>
+          ))}
+        </div>
+        <p style={{ margin: '10px 0 0', color: 'var(--text-dim)', fontSize: '0.78rem' }}>
+          {SKINS.find(s => s.id === skin)?.desc}
+        </p>
+      </div>
+
       <h3>Appearance</h3>
       <div className="card" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
