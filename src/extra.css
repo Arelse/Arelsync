@@ -209,3 +209,66 @@ button.page-num { cursor: pointer; }
   border-right: 3px solid var(--accent); box-shadow: none;
 }
 [data-skin="arelystic"] .poster-art, [data-skin="arelystic"] .album-cover { border-radius: 14px; }
+
+/* =========================================================
+   Mobile bottom navigation — part of the UI Switch skins.
+   Hidden entirely under Default; CSS drives all visual
+   differences between Arellucent's floating pill and
+   Arelystic's flat anchored bar.
+   ========================================================= */
+.mobile-nav { display: none; }
+
+@media (max-width: 720px) {
+  [data-skin="arellucent"] .mobile-nav,
+  [data-skin="arelystic"] .mobile-nav {
+    display: block;
+    position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 60;
+  }
+  [data-skin="arellucent"] .content,
+  [data-skin="arelystic"] .content {
+    padding-bottom: 120px;
+  }
+  /* The skins' bottom nav replaces the hamburger/off-canvas sidebar on mobile */
+  [data-skin="arellucent"] .topbar .mobile-only,
+  [data-skin="arelystic"] .topbar .mobile-only {
+    display: none;
+  }
+}
+
+.mobile-nav-list { display: flex; justify-content: space-between; align-items: center; list-style: none; margin: 0; padding: 10px 18px; }
+.mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: rgba(255,255,255,.45); font-size: .62rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.mobile-nav-item.active { color: var(--accent); }
+.mobile-nav-icon { font-size: 1.35rem; line-height: 1; }
+.mobile-nav-fab-wrap { position: relative; top: -22px; list-style: none; }
+.mobile-nav-fab {
+  width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; text-decoration: none;
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.mobile-nav-fab .mobile-nav-icon { font-size: 1.4rem; }
+
+/* Arellucent: floating glass pill, detached from the screen edge */
+[data-skin="arellucent"] .mobile-nav-list {
+  background: color-mix(in srgb, var(--bg-elev) 65%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  border-radius: 26px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.6);
+}
+[data-skin="arellucent"] .mobile-nav-item.active .mobile-nav-icon {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 80%, transparent));
+}
+[data-skin="arellucent"] .mobile-nav-fab { border: 6px solid var(--bg); }
+
+/* Arelystic: flat bar anchored to the very bottom edge */
+[data-skin="arelystic"] .mobile-nav { left: 0; right: 0; bottom: 0; }
+[data-skin="arelystic"] .mobile-nav-list {
+  background: color-mix(in srgb, var(--bg-elev) 70%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border); border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+[data-skin="arelystic"] .mobile-nav-fab { border: 4px solid var(--bg); width: 50px; height: 50px; }
