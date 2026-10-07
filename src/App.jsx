@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { DataProvider } from './context/DataContext.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import Topbar from './components/Topbar.jsx'
+import MobileNav from './components/MobileNav.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Albums from './pages/Albums.jsx'
@@ -38,6 +39,7 @@ function Shell({ theme, setTheme, premium, setPremium, skin, setSkin }) {
           </Routes>
         </div>
       </div>
+      <MobileNav />
     </div>
   )
 }
@@ -66,9 +68,6 @@ export default function App() {
     setPremiumState(on)
     localStorage.setItem('arelse_premium_ui', on ? '1' : '0')
   }
-  // "UI Switch": Arellucent / Arelystic are full skins that come with their
-  // own locked-in color identity. Switching to one remembers whatever theme
-  // you had, and switching back to Default restores it.
   const setSkin = (s) => {
     if (s === 'default') {
       const prev = localStorage.getItem('arelse_theme_before_skin')
